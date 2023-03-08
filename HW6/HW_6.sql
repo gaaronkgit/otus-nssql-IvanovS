@@ -48,13 +48,8 @@ SELECT si.StockItemID,si.StockItemName, si.UnitPrice FROM Warehouse.StockItems s
 SELECT MIN(si.UnitPrice) AS min_price
 FROM Warehouse.StockItems si)
 
-;WITH MinPriceCTE AS
-(
-SELECT MIN(UnitPrice) AS min_price FROM Warehouse.StockItems
-)
-SELECT si.StockItemID,si.StockItemName, si.UnitPrice 
-  FROM Warehouse.StockItems si
-  JOIN MinPriceCTE mp ON mp.min_price=si.UnitPrice
+SELECT si.StockItemID,si.StockItemName, si.UnitPrice FROM Warehouse.StockItems si WHERE si.UnitPrice <= ALL (
+SELECT MIN(si.UnitPrice) AS min_price FROM Warehouse.StockItems si)
 
 /*
 3. Выберите информацию по клиентам, которые перевели компании пять максимальных платежей 
@@ -76,7 +71,35 @@ SELECT c.* FROM Website.Customers c WHERE c.CustomerID IN (SELECT * FROM MaxCusT
 который осуществлял упаковку заказов (PackedByPersonID).
 */
 
-SELECT * FROM Application.Cities c
+SELECT COUNT(*) FROM (SELECT DISTINCT
+  c1.CityID,
+  c1.CityName
+  FROM Sales.InvoiceLines il
+  JOIN Sales.Invoices i ON il.InvoiceID = i.InvoiceID
+  JOIN Sales.Orders o ON i.OrderID = o.OrderID
+  JOIN Sales.Customers c ON i.CustomerID = c.CustomerID
+  JOIN Application.Cities c1 ON c.DeliveryCityID = c1.CityID
+  WHERE il.StockItemID IN (
+  SELECT TOP 3 StockItemID FROM Warehouse.StockItems si ORDER BY UnitPrice DESC )) AS r
+
+  ;WITH cityCTE AS
+    (
+    SELECT TOP 3 si.StockItemID FROM Warehouse.StockItems si 
+    ORDER BY si.UnitPrice DESC
+    )
+
+    SELECT DISTINCT
+          c.CityID,
+          c.CityName,
+          il.StockItemID
+          FROM Sales.InvoiceLines il
+          JOIN Sales.Invoices i ON il.InvoiceID = i.InvoiceID
+          JOIN Sales.Orders o ON i.OrderID = o.OrderID
+          JOIN Sales.Customers cus ON i.CustomerID = cus.CustomerID
+          JOIN Application.Cities c ON c.CityID = cus.DeliveryCityID
+    JOIN cityCTE ON il.StockItemID = cityCTE.StockItemID
+
+
 
 -- ---------------------------------------------------------------------------
 -- Опциональное задание
