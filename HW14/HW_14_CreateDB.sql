@@ -1,0 +1,20 @@
+﻿USE master
+GO
+
+
+CREATE DATABASE prodsite
+ON PRIMARY (
+NAME = N'prodsite',
+FILENAME = N'E:\OTUS\DB\prodsite.mdf',
+SIZE = 8192 KB,
+MAXSIZE = UNLIMITED,
+FILEGROWTH = 65536 KB
+)
+LOG ON (
+NAME = N'prodsite_log',
+FILENAME = N'E:\OTUS\DB\prodsite_log.ldf',
+SIZE = 8192 KB,
+MAXSIZE = UNLIMITED,
+FILEGROWTH = 65536 KB
+)
+GO
